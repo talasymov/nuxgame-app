@@ -15,10 +15,19 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN composer install --no-dev --no-scripts --optimize-autoloader
 RUN npm install
 RUN npm run build
-#
-#RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-#RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+RUN mkdir -p storage bootstrap/cache database \
+    && chown -R www-data:www-data storage bootstrap/cache database \
+    && chmod -R 775 storage bootstrap/cache database
+
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+RUN cp .env.example .env && \
+    php artisan key:generate
 
 EXPOSE 8000
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
